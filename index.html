@@ -1299,7 +1299,6 @@ function actualizarDatosCRM(event){
             const m=entry.match(/^\[(.+?)\]\[(.+?)\](?:\((.+?)\))?: (.*)$/);
             if(m){
               actsRecuperadas.push({
-                id: Date.now()+Math.random(),
                 prospId: id||0,
                 fecha: m[1],
                 tipo: m[2],
