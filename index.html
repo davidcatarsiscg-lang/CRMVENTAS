@@ -923,9 +923,18 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const SB_HDR = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
 
 async function sbGet(tabla, params=''){
-  const r=await fetch(`${SB_URL}/rest/v1/${tabla}?${params}`,{headers:{...SB_HDR,'Prefer':'return=representation'}});
-  if(!r.ok) throw new Error(`sbGet ${tabla}: ${r.status}`);
-  return r.json();
+  const PAGE=1000;
+  let offset=0, todo=[];
+  while(true){
+    const sep=params?`${params}&`:'';
+    const r=await fetch(`${SB_URL}/rest/v1/${tabla}?${sep}limit=${PAGE}&offset=${offset}`,{headers:{...SB_HDR,'Prefer':'return=representation'}});
+    if(!r.ok) throw new Error(`sbGet ${tabla}: ${r.status}`);
+    const lote=await r.json();
+    todo=todo.concat(lote);
+    if(lote.length<PAGE)break; // ya no hay más filas
+    offset+=PAGE;
+  }
+  return todo;
 }
 async function sbUpsert(tabla, data){
   const arr=Array.isArray(data)?data:[data];
