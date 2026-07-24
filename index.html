@@ -1396,6 +1396,15 @@ function actualizarDatos(event){
         return '';
       }
 
+      // Convierte valores de Excel a número válido para Supabase (columnas numeric).
+      // Si viene "-", vacío, o cualquier texto no numérico, devuelve null (no rompe el guardado).
+      function colNum(r,names){
+        const v=col(r,names);
+        if(v===''||v===null||v===undefined)return null;
+        const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+        return isNaN(n)?null:n;
+      }
+
       clientes=rows.map((r,idx)=>{
         const fnRaw=col(r,['Fecha de Nacimiento','Nacimiento','nacimiento','fecha_nac','Nac','nac']);
         const fnParsed=parseFecha(fnRaw);
@@ -1414,9 +1423,9 @@ function actualizarDatos(event){
         fecha_inicio: fiParsed?fiParsed.getFullYear()+'-'+String(fiParsed.getMonth()+1).padStart(2,'0')+'-'+String(fiParsed.getDate()).padStart(2,'0'):null,
         fecha_fin: ffParsed?ffParsed.getFullYear()+'-'+String(ffParsed.getMonth()+1).padStart(2,'0')+'-'+String(ffParsed.getDate()).padStart(2,'0'):null,
         asesor: String(col(r,['Asesor','asesor'])||'').trim(),
-        precio: col(r,['Precio','precio']),
-        a_cuenta: col(r,['cuenta','Cuenta','a cuenta']),
-        pagos_pend: col(r,['Pendiente','pendiente','Pend','pend']),
+        precio: colNum(r,['Precio','precio']),
+        a_cuenta: colNum(r,['cuenta','Cuenta','a cuenta']),
+        pagos_pend: colNum(r,['Pendiente','pendiente','Pend','pend']),
       });}).filter(c=>c.nombre&&c.nombre!=='-'&&c.nombre.length>1);
 
       // CRUCE con prospectos: primero por DNI, luego por nombre
