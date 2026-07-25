@@ -937,7 +937,18 @@ async function sbGet(tabla, params=''){
   return todo;
 }
 async function sbUpsert(tabla, data){
-  const arr=Array.isArray(data)?data:[data];
+  let arr=Array.isArray(data)?data:[data];
+  // Supabase exige que TODOS los objetos del lote tengan exactamente las mismas llaves.
+  // Si un registro viejo no tiene un campo que uno nuevo sí tiene, se rellena con null.
+  if(arr.length>1){
+    const keys=new Set();
+    arr.forEach(o=>Object.keys(o).forEach(k=>keys.add(k)));
+    arr=arr.map(o=>{
+      const out={};
+      keys.forEach(k=>out[k]=o[k]!==undefined?o[k]:null);
+      return out;
+    });
+  }
   const r=await fetch(`${SB_URL}/rest/v1/${tabla}`,{method:'POST',headers:{...SB_HDR,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(arr)});
   if(!r.ok) throw new Error(`sbUpsert ${tabla}: ${r.status}`);
   return r.json();
